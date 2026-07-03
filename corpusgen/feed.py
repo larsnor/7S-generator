@@ -1,6 +1,6 @@
-"""Feeder — drip a corpus into an Obsidian vault over time, mimicking the central
-app delivering Signal messages. Copies the .md reports in chronological order plus
-any referenced attachments (so image embeds resolve)."""
+"""Feeder — drip a corpus from one folder into a destination folder over time,
+mimicking a central app trickling messages out. Copies the .md reports in
+chronological order plus any referenced attachments (so image embeds resolve)."""
 import re
 import shutil
 import sys
@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 _FM_TIME = re.compile(r"^tidpunkt:\s*(.+)$", re.MULTILINE)
-_EMBED = re.compile(r"!\[\[([^\]]+)\]\]")
+_EMBED = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")  # standard-Markdown image embed
 
 
 def _load(src):
@@ -23,28 +23,27 @@ def _load(src):
 
 
 class Feeder:
-    def __init__(self, src, vault):
+    def __init__(self, src, dest):
         self.src = Path(src)
-        self.vault = Path(vault)
-        self.vault.mkdir(parents=True, exist_ok=True)
+        self.dest = Path(dest)
+        self.dest.mkdir(parents=True, exist_ok=True)
         self.reports = _load(self.src)
         if not self.reports:
             sys.exit(f"No reports found in {self.src}")
         self.idx = 0
-        present = {p.name for p in self.vault.glob("*.md")}
+        present = {p.name for p in self.dest.glob("*.md")}
         while self.idx < len(self.reports) and self.reports[self.idx][1].name in present:
             self.idx += 1
 
     def _copy(self, p):
-        shutil.copy2(p, self.vault / p.name)
+        shutil.copy2(p, self.dest / p.name)
         text = p.read_text(encoding="utf-8")
-        att_src = self.src / "attachments"
-        att_dst = self.vault / "attachments"
-        for name in _EMBED.findall(text):
-            img = att_src / name
+        for rel in _EMBED.findall(text):
+            img = self.src / rel
             if img.exists():
-                att_dst.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(img, att_dst / name)
+                out = self.dest / rel
+                out.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(img, out)
 
     def send(self, n=1):
         sent = 0
@@ -89,20 +88,20 @@ class Feeder:
         print(f"  Span: {self.reports[0][0]:%Y-%m-%d %H:%M} -> {self.reports[-1][0]:%Y-%m-%d %H:%M}")
 
     def reset(self):
-        r = sum(1 for p in self.vault.glob("*.md") for _ in [p.unlink()])
+        r = sum(1 for p in self.dest.glob("*.md") for _ in [p.unlink()])
         self.idx = 0
         print(f"  Removed {r} reports. Reset to start.")
 
 
-def run(src, vault, once=None):
+def run(src, dest, once=None):
     """Interactive REPL, or a single one-shot action (`once` = ('send', n) etc.)."""
-    f = Feeder(src, vault)
+    f = Feeder(src, dest)
     if once:
         cmd, arg = once
         {"send": lambda: f.send(arg or 1), "auto": lambda: f.auto(arg or 15.0),
          "reset": f.reset, "status": f.status}[cmd]()
         return
-    print(f"Loaded {len(f.reports)} reports -> {f.vault}")
+    print(f"Loaded {len(f.reports)} reports -> {f.dest}")
     f.status()
     print("Commands: send [n] | auto [mins] | status | reset | quit")
     while True:

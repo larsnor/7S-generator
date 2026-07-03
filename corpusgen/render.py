@@ -1,6 +1,6 @@
-"""Render a report record into new-format 7S-rapport markdown (the format the ODEN
-plugin reads): Händelse free-prose, MGRS grid in Ställe, signal_* frontmatter, an
-optional Symbol, no wikilinks."""
+"""Render a report record into 7S-rapport markdown: Händelse free-prose, MGRS grid
+in Ställe, signal_* frontmatter, an optional Symbol, and (when a photo is attached)
+a standard-Markdown image embed so the report renders in any Markdown viewer."""
 
 
 def tnr_from(dt):
@@ -34,5 +34,5 @@ def render(rec):
         body += [f"**Symbol:** {rec['symbol']}", ""]
     body += [f"**Sagesman:** {rec['callsign']}", "", "**Sedan:** -", ""]
     if rec.get("image"):
-        body += [f"![[{rec['image']}]]", ""]
+        body += [f"![{rec['image']}](attachments/{rec['image']})", ""]
     return "\n".join(fm) + "\n".join(body) + "\n"

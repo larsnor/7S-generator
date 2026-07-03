@@ -1,9 +1,8 @@
 # 7S-generator
 
-A small, dependency-free **CLI** that generates synthetic **7S field-report
-corpora** for testing situational-awareness tools (it was built to feed the
-[ODEN](https://github.com/larsnor/ODEN-analys) plugin, but the output is plain
-Markdown + a ground-truth file, usable anywhere).
+A small, dependency-free, **standalone CLI** that generates synthetic **7S
+field-report corpora** for testing situational-awareness tools. The output is
+plain Markdown + a ground-truth file, usable anywhere.
 
 You describe an **area of interest** and a **time window**, and it produces a
 realistic stream of *normal* civilian reports. Two further commands layer a
@@ -13,8 +12,9 @@ tagged in the ground truth so detection can be scored.
 
 - **Standard library only** — no dependencies, no network.
 - **Deterministic** — same `--seed` → same corpus.
-- **Plugin-compatible output** — new-format `7S-rapport` markdown (free-prose
-  Händelse, MGRS grids, `signal_*` frontmatter) that ODEN reads directly.
+- **Portable output** — `7S-rapport` markdown (free-prose Händelse, MGRS grids,
+  `signal_*` frontmatter, standard-Markdown image embeds) that renders in any
+  Markdown viewer.
 
 ## Install / run
 
@@ -65,14 +65,16 @@ Injects a **group** (`demonstranter · miljöaktivister · fredsaktivister`) tha
 gathers at one location on one day — not hostile, but a spatio-temporal cluster
 that stresses a detector's precision.
 
-### 4. `feed` — drip a corpus into an Obsidian vault
+### 4. `feed` — drip a corpus into a destination folder
 ```bash
-python3 -m corpusgen feed --corpus ./corpus_tierp --vault /path/to/Vault
+python3 -m corpusgen feed --corpus ./corpus_tierp --dest /path/to/inbox
 ```
-Mimics the central app delivering messages over time. Interactive by default
-(`send [n]` · `auto [mins]` · `status` · `reset` · `quit`); copies referenced
-attachments so image embeds resolve. One-shot flags for scripts/CI:
-`--send N` · `--auto MINS` · `--reset` · `--status`.
+Delivers the reports from the corpus folder into any destination folder in
+chronological order — either **in compressed time** (`--auto MINS`) or **in
+batches** (`--send N`) — mimicking a central app trickling messages out over
+time. Interactive by default (`send [n]` · `auto [mins]` · `status` · `reset` ·
+`quit`); copies referenced attachments so image embeds resolve. One-shot flags
+for scripts/CI: `--send N` · `--auto MINS` · `--reset` · `--status`.
 
 ## Output
 
@@ -91,19 +93,13 @@ hostile/protester repertoires — is declarative data in
 [`corpusgen/content.py`](corpusgen/content.py). Add an area type or a hostility
 mode by editing that one file; the generation logic stays untouched.
 
-## Relationship to ODEN & sync contract
+## Report format
 
-7S-generator is standalone, but it shares a small **format contract** with the
-[ODEN](https://github.com/larsnor/ODEN-analys) plugin that consumes its output:
-
-- the new-format `7S-rapport` markdown produced by
-  [`corpusgen/render.py`](corpusgen/render.py), and
-- the `7SPLATE:` JPEG-comment marker written by
-  [`corpusgen/images.py`](corpusgen/images.py) (read by ODEN's vision stub).
-
-Two modules — [`corpusgen/mgrs.py`](corpusgen/mgrs.py) and
-[`corpusgen/render.py`](corpusgen/render.py) — are **deliberately duplicated**
-(copied, not shared, so the repos stay independent). There is **no build-time
-coupling**, only this contract: **if you change the report format, the `7SPLATE:`
-marker, or MGRS handling in one repo, mirror it in the other** so a fed corpus
-keeps parsing in ODEN.
+Each report is a `7S-rapport` Markdown file with YAML frontmatter (`id`, `tnr`,
+`tidpunkt`, `plats`, optional `signal_*` delivery fields and `lat`/`lon`) followed
+by the 7S body (`Stund`, `Ställe`, `Händelse`, optional `Symbol`, `Sagesman`).
+When `--images` is used, a plate photo is attached as a standard-Markdown embed
+(`![...](attachments/…)`) with the plate also written into the JPEG comment
+(marker `7SPLATE:`) so an offline consumer can read it without OCR. The report
+rendering lives in [`corpusgen/render.py`](corpusgen/render.py) and MGRS handling
+in [`corpusgen/mgrs.py`](corpusgen/mgrs.py).

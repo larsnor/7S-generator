@@ -1,7 +1,6 @@
 # 7S-generator — TODO
 
-Deferred work for the corpus generator (separate from the
-[ODEN](https://github.com/larsnor/ODEN-analys) plugin).
+Deferred work for the standalone corpus generator.
 
 - [ ] **More area types** — industrial estate, power plant, border crossing,
       railway yard, hospital. Add a profile to `corpusgen/content.py` (frequency,
@@ -15,11 +14,3 @@ Deferred work for the corpus generator (separate from the
 - [ ] **Offline gazetteer** — optional place-name → coordinate lookup for the AOI
       (so `--aoi` could take a name), usable air-gapped.
 - [ ] **Packaging** — verify the `7s-generator` console entry point; consider PyPI.
-
-## Sync contract (keep in parity with ODEN)
-
-`corpusgen/mgrs.py` and `corpusgen/render.py` are **copied from / mirror** the ODEN
-plugin, and the output format + the `7SPLATE:` image marker are a **shared
-contract**. Change the report format / marker / MGRS in one repo → mirror it in the
-other. There is no build coupling — only this contract. (Same note in ODEN's
-`TODO.md`.)

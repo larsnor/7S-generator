@@ -1,8 +1,7 @@
 """Optional plate mockups (requires Pillow — imported lazily, so the rest of the
 tool stays dependency-free). The plate is rendered legibly AND embedded in the
-JPEG comment (marker ``7SPLATE:``) so an offline corroboration consumer (e.g. the
-ODEN vision stub) can read it without an OCR model; a real vision model would read
-the pixels instead."""
+JPEG comment (marker ``7SPLATE:``) so an offline corroboration consumer can read it
+without an OCR model; a real vision model would read the pixels instead."""
 from pathlib import Path
 
 PLATE_MARKER = "7SPLATE:"
