@@ -3,6 +3,7 @@
 `build_normal` creates a corpus of benign activity for an area; `add_hostiles` and
 `add_protesters` inject a threat / noise layer into an existing corpus. All three
 are seedable and deterministic."""
+import random as _random
 import uuid as _uuid
 from datetime import datetime, timedelta
 
@@ -76,8 +77,8 @@ def _new_record(dt, loc, rng, platoon_uuid):
 
 # --- normal activity --------------------------------------------------------
 def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
-                 reports=None, obj_name="objektet"):
-    rng = __import__("random").Random(seed)
+                 reports=None, obj_name="objektet", images=False):
+    rng = _random.Random(seed)
     prof = AREAS[area]
     season = season_of(start.month)
     smeta = SEASONS[season]
@@ -92,6 +93,10 @@ def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
         "from": start.strftime("%Y-%m-%d"), "days": days, "callsigns": callsigns,
         "season": season, "seed": seed, "locations": locs, "platoon_uuid": platoon_uuid,
     })
+    render_plate = None
+    if images:
+        from .images import render_plate  # lazy: only needs Pillow with --images
+        corpus.ensure_attachments(clear_plates=True)
 
     for _ in range(reports):
         loc = rng.choice(locs)
@@ -105,6 +110,10 @@ def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
         rec["handelse"] = template.format(car=car, dog=rng.choice(DOGS), colour=rng.choice(COLOURS))
         if rng.random() < 0.12:  # occasional benign appearance (season-appropriate)
             rec["symbol"] = f"{rng.choice(smeta['upper'])}, {rng.choice(smeta['accessory'])}"
+        if images and rec["plate"]:  # a corroborating photo of the typed plate
+            img_name = f"plate_{rec['uuid'][:8]}.jpg"
+            render_plate(rec["plate"], corpus.attachments / img_name)
+            rec["image"] = img_name
         corpus.add(rec, "civil")
 
     corpus.save()
@@ -121,7 +130,7 @@ def _plate(rng):
 
 # --- hostiles ---------------------------------------------------------------
 def add_hostiles(corpus, htype, count, seed):
-    rng = __import__("random").Random(seed)
+    rng = _random.Random(seed)
     prof = HOSTILES[htype]
     m = corpus.meta
     lat, lon = m["aoi"]
@@ -155,7 +164,7 @@ def add_hostiles(corpus, htype, count, seed):
 
 # --- protesters (challenging civilians) -------------------------------------
 def add_protesters(corpus, ptype, count, seed):
-    rng = __import__("random").Random(seed)
+    rng = _random.Random(seed)
     prof = PROTESTERS[ptype]
     m = corpus.meta
     start = datetime.strptime(m["from"], "%Y-%m-%d")

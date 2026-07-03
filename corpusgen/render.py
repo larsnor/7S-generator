@@ -24,6 +24,8 @@ def render(rec):
     if rec.get("lat") is not None:
         fm += [f"lat: {rec['lat']}", f"lon: {rec['lon']}",
                f'location: "{rec["lat"]},{rec["lon"]}"']
+    if rec.get("image"):
+        fm.append(f'bilagor: ["{rec["image"]}"]')
     fm += [f"sagesman: {rec['callsign']}", "---", ""]
 
     body = [f"**TNR:** {tnr}", "", f"**Stund:** {rec['stund']}", "",
@@ -31,4 +33,6 @@ def render(rec):
     if rec.get("symbol"):
         body += [f"**Symbol:** {rec['symbol']}", ""]
     body += [f"**Sagesman:** {rec['callsign']}", "", "**Sedan:** -", ""]
+    if rec.get("image"):
+        body += [f"![[{rec['image']}]]", ""]
     return "\n".join(fm) + "\n".join(body) + "\n"

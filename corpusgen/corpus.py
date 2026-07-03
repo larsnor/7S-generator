@@ -15,6 +15,18 @@ class Corpus:
         self.ground_truth = []
         self._seen_tnr = {}
 
+    @property
+    def attachments(self):
+        """Corpus-local attachments folder (plate mockups, etc.)."""
+        return self.path / "attachments"
+
+    def ensure_attachments(self, clear_plates=False):
+        self.attachments.mkdir(parents=True, exist_ok=True)
+        if clear_plates:
+            for old in self.attachments.glob("plate_*.jpg"):
+                old.unlink()
+        return self.attachments
+
     # --- create / load -------------------------------------------------------
     @classmethod
     def create(cls, path, meta):

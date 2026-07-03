@@ -44,6 +44,10 @@ python3 -m corpusgen generate \
   start month) shifts clothing, daylight hours and civilian volume.
 - Report count is derived from `frequency × days × season` (override with
   `--reports`).
+- `--images` (optional) attaches a **corroborating plate photo** to each report
+  whose text names a plate — the plate is rendered legibly *and* embedded in the
+  JPEG comment (`7SPLATE:`) so an offline consumer can read it. Needs **Pillow**
+  (`pip install Pillow`); everything else is stdlib-only.
 
 ### 2. `add-hostiles` — a threat cell
 ```bash
@@ -60,6 +64,15 @@ python3 -m corpusgen add-protesters --corpus ./corpus_tierp --type miljöaktivis
 Injects a **group** (`demonstranter · miljöaktivister · fredsaktivister`) that
 gathers at one location on one day — not hostile, but a spatio-temporal cluster
 that stresses a detector's precision.
+
+### 4. `feed` — drip a corpus into an Obsidian vault
+```bash
+python3 -m corpusgen feed --corpus ./corpus_tierp --vault /path/to/Vault
+```
+Mimics the central app delivering messages over time. Interactive by default
+(`send [n]` · `auto [mins]` · `status` · `reset` · `quit`); copies referenced
+attachments so image embeds resolve. One-shot flags for scripts/CI:
+`--send N` · `--auto MINS` · `--reset` · `--status`.
 
 ## Output
 

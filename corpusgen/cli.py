@@ -39,11 +39,24 @@ def cmd_generate(a):
     c = generate.build_normal(
         out=a.out, lat=a.aoi[0], lon=a.aoi[1], radius=a.radius, area=a.area,
         start=getattr(a, "from"), days=days, callsigns=a.callsigns, seed=a.seed,
-        reports=a.reports, obj_name=a.name,
+        reports=a.reports, obj_name=a.name, images=a.images,
     )
     print(f"[{a.area}] wrote {len(c.ground_truth)} reports to {c.path} "
           f"({days} days, season {c.meta['season']}, {len(c.meta['locations'])} locations)")
+    if a.images:
+        n = sum(1 for r in c.ground_truth if r.get("plate"))
+        print(f"rendered corroborating plate photos for {n} plate report(s)")
     print(f"ground truth: {c.counts()}")
+
+
+def cmd_feed(a):
+    from . import feed
+    once = None
+    for k in ("send", "auto", "reset", "status"):
+        v = getattr(a, k)
+        if v is not False and v is not None:
+            once = (k, v if not isinstance(v, bool) else None)
+    feed.run(a.corpus, a.vault, once)
 
 
 def cmd_add_hostiles(a):
@@ -76,6 +89,8 @@ def build_parser():
                    metavar="AQ,BQ,…", help="platoon callsigns (one sector each)")
     g.add_argument("--name", default="objektet", help="AOI name, used in threat prose")
     g.add_argument("--reports", type=int, help="override the auto report count")
+    g.add_argument("--images", action="store_true",
+                   help="attach corroborating plate photos to plate reports (needs Pillow)")
     g.add_argument("--seed", type=int, default=2026)
     g.add_argument("--out", required=True, metavar="DIR", help="output corpus directory")
     g.set_defaults(func=cmd_generate)
@@ -93,6 +108,15 @@ def build_parser():
     r.add_argument("--count", type=int, help="group size (default: profile range)")
     r.add_argument("--seed", type=int, default=11)
     r.set_defaults(func=cmd_add_protesters)
+
+    f = sub.add_parser("feed", help="drip a corpus into an Obsidian vault")
+    f.add_argument("--corpus", required=True, metavar="DIR")
+    f.add_argument("--vault", required=True, metavar="PATH", help="vault (or subfolder) to drop reports into")
+    f.add_argument("--send", type=int, metavar="N", help="one-shot: deliver the next N and exit")
+    f.add_argument("--auto", type=float, metavar="MINS", help="one-shot: replay over ~MINS and exit")
+    f.add_argument("--reset", action="store_true", help="one-shot: clear delivered reports and exit")
+    f.add_argument("--status", action="store_true", help="one-shot: print progress and exit")
+    f.set_defaults(func=cmd_feed)
     return p
 
 
