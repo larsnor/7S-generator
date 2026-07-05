@@ -73,5 +73,25 @@ class TestAugment(unittest.TestCase):
             self.assertEqual(len({r["member"] for r in prot}), 1)        # one group
 
 
+class TestCliAoi(unittest.TestCase):
+    def _parse(self, *aoi_tokens):
+        from corpusgen.cli import build_parser
+        args = build_parser().parse_args(
+            ["generate", "--aoi", *aoi_tokens, "--from", "2026-06-15", "--out", "/tmp/x"])
+        return args.aoi
+
+    def test_aoi_accepts_common_forms(self):
+        self.assertEqual(self._parse("59.664,18.925"), (59.664, 18.925))      # canonical
+        self.assertEqual(self._parse("59.664,", "18.925"), (59.664, 18.925))  # space after comma
+        self.assertEqual(self._parse("59.664", "18.925"), (59.664, 18.925))   # space separator
+        self.assertEqual(self._parse("59.664, 18.925"), (59.664, 18.925))     # quoted, spaced
+
+    def test_aoi_rejects_bad_input(self):
+        with self.assertRaises(SystemExit):      # argparse exits on a bad value
+            self._parse("59.664")                # only one number
+        with self.assertRaises(SystemExit):
+            self._parse("abc,def")               # non-numeric
+
+
 if __name__ == "__main__":
     unittest.main()

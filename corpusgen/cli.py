@@ -6,6 +6,7 @@
   feed            drip a corpus into a destination folder over time
 """
 import argparse
+import re
 import sys
 from datetime import datetime
 
@@ -19,9 +20,19 @@ class _Fmt(argparse.ArgumentDefaultsHelpFormatter,
     """Show defaults on every option *and* keep epilog/example text raw."""
 
 
-def _aoi(s):
-    lat, lon = (float(x) for x in s.split(","))
-    return lat, lon
+class _AoiAction(argparse.Action):
+    """Parse --aoi as LAT,LON into a (lat, lon) tuple, tolerantly: a comma, a space,
+    or both may separate the two numbers, so `59.66,18.92`, `59.66, 18.92` (a space
+    after the comma splits it into two shell tokens), and `59.66 18.92` all work."""
+    def __call__(self, parser, namespace, values, option_string=None):
+        text = " ".join(values)
+        parts = [p for p in re.split(r"[,\s]+", text.strip()) if p]
+        if len(parts) != 2:
+            raise argparse.ArgumentError(self, f"expected LAT,LON (two numbers), got {text!r}")
+        try:
+            setattr(namespace, self.dest, (float(parts[0]), float(parts[1])))
+        except ValueError:
+            raise argparse.ArgumentError(self, f"LAT and LON must be numbers, got {text!r}")
 
 
 def _callsigns(s):
@@ -101,8 +112,9 @@ def build_parser():
                "    --from 2026-06-15 --days 14 \\\n"
                "    --callsigns AQ,BQ,CQ,DQ --name \"Tierp flygfalt\" \\\n"
                "    --out ./corpus_tierp")
-    g.add_argument("--aoi", type=_aoi, required=True, metavar="LAT,LON",
-                   help="area-of-interest centre, decimal degrees (e.g. 60.345,17.422)")
+    g.add_argument("--aoi", nargs="+", action=_AoiAction, required=True, metavar="LAT,LON",
+                   help="area-of-interest centre, decimal degrees, latitude first "
+                        "(e.g. 60.345,17.422; a space after the comma is fine)")
     g.add_argument("--radius", type=float, default=3.0, metavar="KM",
                    help="location scatter radius from the AOI, km (>0, typ. 1-20)")
     g.add_argument("--area", choices=sorted(AREAS), default="rural",
