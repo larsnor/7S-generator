@@ -85,7 +85,7 @@ def cmd_feed(a):
 
 def cmd_add_hostiles(a):
     c = Corpus.load(a.corpus)
-    n = generate.add_hostiles(c, a.type, a.count, a.seed)
+    n = generate.add_hostiles(c, a.type, a.count, a.seed, varied=a.varied_marks)
     print(f"injicerade {n} {a.type}-fiende(r) i {c.path}")
     print(f"facit: {c.counts()}")
 
@@ -161,6 +161,9 @@ def build_parser():
                         "fiende återkommer flera gånger (1–4× beroende på typ), så antalet "
                         "rapporter blir count × återkomster — alltså mer än count.")
     h.add_argument("--seed", type=int, default=7, metavar="N", help="slumpfrö")
+    h.add_argument("--varied-marks", action="store_true",
+                   help="valideringsläge: varje medlem har EN tell men parafraseras per "
+                        "observation; skriver tell-facit (för generaliseringstest av re-id)")
     h.set_defaults(func=cmd_add_hostiles)
 
     r = sub.add_parser(

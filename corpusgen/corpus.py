@@ -52,7 +52,7 @@ class Corpus:
         return c
 
     # --- writing -------------------------------------------------------------
-    def add(self, rec, truth, subtype=None, member=None):
+    def add(self, rec, truth, subtype=None, member=None, tells=None):
         """Write one report + its ground-truth row. Returns the filename."""
         base = f"TNR{rec['tnr']}"
         self._seen_tnr[base] = self._seen_tnr.get(base, 0) + 1
@@ -63,12 +63,15 @@ class Corpus:
         fname = f"TNR{rec['tnr']}.md"
         (self.path / fname).write_text(
             render(rec, obsidian=bool(self.meta.get("obsidian"))), encoding="utf-8")
-        self.ground_truth.append({
+        row = {
             "file": fname, "id": f"7S-{rec['uuid']}", "tnr": rec["tnr"],
             "tidpunkt": rec["tidpunkt"], "truth": truth, "subtype": subtype,
             "member": member, "plate": rec.get("plate"), "sector": rec.get("sector"),
             "callsign": rec.get("callsign"),
-        })
+        }
+        if tells:  # native tell ground truth (varied-marks mode); no hand annotation
+            row["tells"] = tells
+        self.ground_truth.append(row)
         return fname
 
     def save(self):

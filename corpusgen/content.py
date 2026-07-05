@@ -214,6 +214,68 @@ HOSTILES = {
     },
 }
 
+# --- Varied re-identification tells (validation mode) -----------------------
+# For MEASURING how well a downstream soft-re-id recogniser generalises: each
+# hostile MEMBER gets ONE stable tell, but every appearance renders it with
+# DIFFERENT surface words (paraphrase), drawn from a pool authored independently of
+# any recogniser vocabulary. `category` is the objective ground-truth label (what
+# the person actually carried) — NOT what a recogniser sees. Some in-taxonomy
+# renderings use synonyms a narrow recogniser knows, some deliberately don't (gaps);
+# four tells are OUT of a typical 3-category taxonomy (optics/tattoo/case/vest) to
+# expose the recall ceiling. Used only in --varied-marks mode; the fixed `marks`
+# above are untouched.
+VARIED_TELLS = {
+    # in-taxonomy: backpack + a marking. {colour} is filled per MEMBER (stable), so
+    # different operators can carry different-coloured bags (a fair precision test).
+    "tell_bag": {"category": "bag", "phrasings": [
+        "{colour} ryggsäck med ett märke",
+        "{colour} väska på ryggen med en logga",
+        "axelväska, {colour}, med ett tryck",
+        "ryggsäck i {colour} tyg, delvis synligt emblem",
+        "bar en {colour} ryggsäck, otydlig logotyp",
+        "{colour} packning på ryggen, ingen skylt",   # gap: 'packning' unknown synonym
+        "{colour} ryggsäck utan märken"]},            # gap: no marking / negated
+    # in-taxonomy: cap/hat + a marking. {colour} per member (stable).
+    "tell_cap": {"category": "cap", "phrasings": [
+        "{colour} keps med ett emblem",
+        "{colour} mössa med ett litet märke framtill",
+        "keps, {colour}, med en logga",
+        "{colour} mössa, tryckt symbol",
+        "bar en huvudbonad, {colour}, märkt",
+        "{colour} luva neddragen",                     # gap: 'luva' unknown synonym
+        "{colour} keps, inget särskilt"]},             # gap: no marking
+    # OUT of taxonomy — no recogniser category exists (measures the ceiling)
+    "tell_optics": {"category": "optics", "phrasings": [
+        "kikare runt halsen",
+        "kamera med kraftigt teleobjektiv",
+        "höll en handkikare mot området",
+        "nattkikare i handen",
+        "systemkamera med långt objektiv"]},
+    "tell_tattoo": {"category": "tattoo", "phrasings": [
+        "iögonfallande tatuering på halsen",
+        "tatuerad underarm, en orm",
+        "stor tatuering i nacken",
+        "ormtatuering längs vänster arm"]},
+    "tell_case": {"category": "case", "phrasings": [
+        "bar en läderportfölj",
+        "svart portfölj i handen",
+        "aktväska av läder",
+        "stel dokumentväska under armen"]},
+    "tell_vest": {"category": "vest", "phrasings": [
+        "reflexväst märkt BEVAKNING",
+        "gul varselväst med tryckt text",
+        "orange skyddsväst med logga",
+        "signalgul väst, texten SÄKERHET"]},
+}
+
+# Excluded/outfit clothing prepended as realistic noise around the tell — a good
+# recogniser must ignore these (comma-separated from the tell, so a separate clause).
+DECOY_CLOTHING = [
+    "mörk jacka", "ljus tröja", "grå huvtröja", "blå skjorta",
+    "svart täckjacka", "beige rock", "grön fältjacka", "vardaglig klädsel",
+]
+
+
 # --- Challenging civilians (protesters) -------------------------------------
 # Not hostile, but noisy: a GROUP gathers at one location on one day. size is the
 # number of individual sightings the event produces.

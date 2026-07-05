@@ -8,7 +8,7 @@ import uuid as _uuid
 from datetime import datetime, timedelta
 
 from . import geo
-from .content import AREAS, SEASONS, HOSTILES, PROTESTERS, CARS, DOGS, COLOURS
+from .content import AREAS, SEASONS, HOSTILES, PROTESTERS, CARS, DOGS, COLOURS, VARIED_TELLS, DECOY_CLOTHING
 from .corpus import Corpus
 from .mgrs import latlon_to_mgrs
 from .render import tnr_from, iso
@@ -141,7 +141,7 @@ def _plate(rng):
 
 
 # --- hostiles ---------------------------------------------------------------
-def add_hostiles(corpus, htype, count, seed):
+def add_hostiles(corpus, htype, count, seed, varied=False):
     rng = _random.Random(seed)
     prof = HOSTILES[htype]
     m = corpus.meta
@@ -157,6 +157,32 @@ def add_hostiles(corpus, htype, count, seed):
 
     if count is None:
         count = rng.randint(2, 10)
+
+    # Varied-marks (validation) mode: each MEMBER keeps ONE tell but every
+    # appearance PARAPHRASES it, and the true tell is written to ground truth. This
+    # makes soft re-id a real paraphrase task (not verbatim string matching) and
+    # frees the truth from any recogniser's vocabulary.
+    if varied:
+        tell_ids = list(VARIED_TELLS)
+        rng.shuffle(tell_ids)
+        # a range of real gear colours — the recogniser only distinguishes dark/light,
+        # so greens/blues expose the colour vocabulary too.
+        colours = ["mörk", "svart", "ljus", "ljusgrå", "grön", "blå", "beige"]
+        for i in range(count):
+            member = f"H{i + 1}"
+            tid = tell_ids[i % len(tell_ids)]
+            pool = VARIED_TELLS[tid]["phrasings"]
+            colour = rng.choice(colours)  # STABLE per member (their gear colour)
+            for _ in range(rng.randint(*prof["appearances"])):
+                loc = rng.choice(near if rng.random() < prof["near_bias"] else locs)
+                rec = _new_record(_threat_time(start, days, rng, prof["night_bias"]), loc, rng, platoon_uuid)
+                rec["handelse"] = rng.choice(prof["behaviour"]).format(obj=obj)
+                phrasing = rng.choice(pool).replace("{colour}", colour)
+                rec["symbol"] = f"{rng.choice(DECOY_CLOTHING)}, {phrasing}"
+                corpus.add(rec, "hostile", subtype=htype, member=member, tells=[tid])
+        corpus.save()
+        return count
+
     marks = prof["marks"][:]
     rng.shuffle(marks)
 
