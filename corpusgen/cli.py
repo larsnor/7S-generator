@@ -64,12 +64,16 @@ def cmd_generate(a):
         out=a.out, lat=a.aoi[0], lon=a.aoi[1], radius=a.radius, area=a.area,
         start=getattr(a, "from"), days=days, callsigns=a.callsigns, seed=a.seed,
         reports=a.reports, obj_name=a.name, images=a.images, obsidian=a.obsidian,
+        photos=a.photos,
     )
     print(f"[{a.area}] skrev {len(c.ground_truth)} rapporter till {c.path} "
           f"({days} dagar, årstid {c.meta['season']}, {len(c.meta['locations'])} platser)")
     if a.images:
         n = sum(1 for r in c.ground_truth if r.get("plate"))
         print(f"renderade skyltfoton för {n} skyltrapport(er)")
+    if a.photos:
+        n = sum(1 for r in c.ground_truth if r.get("image_truth"))
+        print(f"bifogade {n} riktiga foton från bildbanken ('Se bild')")
     print(f"facit: {c.counts()}")
 
 
@@ -85,7 +89,7 @@ def cmd_feed(a):
 
 def cmd_add_hostiles(a):
     c = Corpus.load(a.corpus)
-    n = generate.add_hostiles(c, a.type, a.count, a.seed, varied=a.varied_marks)
+    n = generate.add_hostiles(c, a.type, a.count, a.seed, varied=a.varied_marks, photos=a.photos)
     print(f"injicerade {n} {a.type}-fiende(r) i {c.path}")
     print(f"facit: {c.counts()}")
 
@@ -139,6 +143,10 @@ def build_parser():
                    help="åsidosätt automatiskt rapportantal (standard: frekvens × dagar × årstid)")
     g.add_argument("--images", action="store_true",
                    help="bifoga bekräftande skyltfoton till skyltrapporter (kräver Pillow)")
+    g.add_argument("--photos", action="store_true",
+                   help="bifoga riktiga foton från den inbyggda (syntetiska) bildbanken som "
+                        "'Se bild'-rapporter — fordon med skylt + benigna scener. Testar "
+                        "bildanalys-vägen (VLM) i lägesbildsverktyget. Ingen Pillow behövs.")
     g.add_argument("--obsidian", action="store_true",
                    help="Obsidian-kompatibel utdata: bildinbäddningar som `## Bilagor` + "
                         "`![[wikilänk]]` i per-meddelande-mappar, identiskt med källappen "
@@ -164,6 +172,9 @@ def build_parser():
     h.add_argument("--varied-marks", action="store_true",
                    help="valideringsläge: varje medlem har EN tell men parafraseras per "
                         "observation; skriver tell-facit (för generaliseringstest av re-id)")
+    h.add_argument("--photos", action="store_true",
+                   help="bifoga spanings-/fordonsfoton från bildbanken som 'Se bild'-rapporter "
+                        "till en del av hotcellens observationer (testar VLM-vägen)")
     h.set_defaults(func=cmd_add_hostiles)
 
     r = sub.add_parser(

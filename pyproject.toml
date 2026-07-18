@@ -32,3 +32,7 @@ Issues = "https://github.com/larsnor/7S-generator/issues"
 
 [tool.setuptools]
 packages = ["corpusgen"]
+
+[tool.setuptools.package-data]
+# Ship the bundled synthetic image bank (fully generated → no GDPR/IP concern).
+corpusgen = ["imagebank/*.jpg", "imagebank/bank.json"]

@@ -1,0 +1,407 @@
+{
+  "images": [
+    {
+      "file": "vehicle_01.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "LUK221",
+        "vehicle": "röd Volvo",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_02.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "TBF907",
+        "vehicle": "blå Audi",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_03.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "MSD413",
+        "vehicle": "silver Volkswagen",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_04.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "XRE58H",
+        "vehicle": "svart BMW",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_05.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "GPN640",
+        "vehicle": "vit Toyota",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_06.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "KWZ192",
+        "vehicle": "mörkgrön Saab",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_07.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "DHJ705",
+        "vehicle": "grå Mercedes",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_08.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "VNC834",
+        "vehicle": "blå Ford",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_09.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "RAM019",
+        "vehicle": "beige Volvo",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_10.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "FYT26B",
+        "vehicle": "vit Tesla",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_11.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "BEK550",
+        "vehicle": "mörkblå Skoda",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "vehicle_12.jpg",
+      "role": "plate",
+      "truth": {
+        "plate": "OLP377",
+        "vehicle": "grön Land Rover",
+        "behaviour": []
+      }
+    },
+    {
+      "file": "benign_01.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "röd jacka"
+        ],
+        "persons": 1,
+        "desc": "a young man in a red jacket standing on a gravel road"
+      }
+    },
+    {
+      "file": "benign_02.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "gul regnjacka"
+        ],
+        "persons": 1,
+        "desc": "a woman in a yellow raincoat walking a dog on a path"
+      }
+    },
+    {
+      "file": "benign_03.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "blå rutig skjorta"
+        ],
+        "persons": 1,
+        "desc": "a middle-aged man in a blue checked shirt standing by a fence"
+      }
+    },
+    {
+      "file": "benign_04.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "lila kappa"
+        ],
+        "persons": 1,
+        "desc": "an elderly woman in a purple coat with a shopping bag"
+      }
+    },
+    {
+      "file": "benign_05.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "ryggsäckar"
+        ],
+        "persons": 1,
+        "desc": "two hikers with backpacks on a forest trail"
+      }
+    },
+    {
+      "file": "benign_06.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [],
+        "persons": 1,
+        "desc": "a family with children by a jetty near boats"
+      }
+    },
+    {
+      "file": "benign_07.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "overall"
+        ],
+        "persons": 1,
+        "desc": "a man in overalls carrying firewood by a red barn"
+      }
+    },
+    {
+      "file": "benign_08.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "grön jacka"
+        ],
+        "persons": 1,
+        "desc": "a woman in a green jacket picking mushrooms in a forest"
+      }
+    },
+    {
+      "file": "benign_09.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "grå rock",
+          "keps"
+        ],
+        "persons": 1,
+        "desc": "an elderly man in a grey coat and flat cap waiting at a bus stop"
+      }
+    },
+    {
+      "file": "benign_10.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "sportkläder"
+        ],
+        "persons": 1,
+        "desc": "a jogger in bright sportswear on a country lane"
+      }
+    },
+    {
+      "file": "benign_11.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "karta"
+        ],
+        "persons": 1,
+        "desc": "a couple in autumn clothing looking at a map by a lake"
+      }
+    },
+    {
+      "file": "benign_12.jpg",
+      "role": "benign",
+      "truth": {
+        "behaviour": [],
+        "marks": [
+          "beige kappa"
+        ],
+        "persons": 1,
+        "desc": "a woman in a beige coat standing on a cobblestone street"
+      }
+    },
+    {
+      "file": "recon_01.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man looking through binoculars towards a building, forest edge"
+      }
+    },
+    {
+      "file": "recon_02.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a person photographing with a large telephoto camera lens on a hillside"
+      }
+    },
+    {
+      "file": "recon_03.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man in dark clothing observing a gate from across the street"
+      }
+    },
+    {
+      "file": "recon_04.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "registrering",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man writing in a notebook while watching a road, roadside"
+      }
+    },
+    {
+      "file": "recon_05.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "perimeter",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a person looking through a chain-link fence at an industrial yard"
+      }
+    },
+    {
+      "file": "recon_06.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man with binoculars near a jetty watching boats in an archipelago"
+      }
+    },
+    {
+      "file": "recon_07.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a person crouched observing through a monocular in tall grass"
+      }
+    },
+    {
+      "file": "recon_08.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "registrering",
+          "perimeter"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man pacing and measuring along a fence line with a device"
+      }
+    },
+    {
+      "file": "recon_09.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man photographing a bridge with a camera, standing still"
+      }
+    },
+    {
+      "file": "recon_10.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik",
+          "observation"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a person in a parked-car window watching a driveway with binoculars"
+      }
+    },
+    {
+      "file": "recon_11.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "dröjande",
+          "perimeter"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a man lingering by a locked gate looking around repeatedly"
+      }
+    },
+    {
+      "file": "recon_12.jpg",
+      "role": "recon",
+      "truth": {
+        "behaviour": [
+          "optik"
+        ],
+        "marks": [],
+        "persons": 1,
+        "desc": "a person filming a harbour entrance with a handheld camera"
+      }
+    }
+  ]
+}

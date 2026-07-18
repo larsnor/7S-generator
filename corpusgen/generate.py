@@ -10,8 +10,32 @@ from datetime import datetime, timedelta
 from . import geo
 from .content import AREAS, SEASONS, HOSTILES, PROTESTERS, CARS, DOGS, COLOURS, VARIED_TELLS, DECOY_CLOTHING
 from .corpus import Corpus
+from .imagebank import ImageBank
 from .mgrs import latlon_to_mgrs
 from .render import tnr_from, iso
+
+
+def _attach_entry(corpus, rec, bank, entry, obsidian):
+    """Turn `rec` into a 'Se bild.' photo report carrying a specific bank image,
+    copying it into the corpus and recording its facit. The typed text is dropped —
+    this is the VLM-only case the situational tool's vision layer exists for."""
+    folder = _attachment_dir(rec) if obsidian else "attachments"
+    bank.copy(entry, corpus.path / folder)
+    rec["image"] = f"{folder}/{entry['file']}"
+    rec["image_truth"] = entry["truth"]
+    rec["handelse"] = "Se bild."
+    rec.pop("symbol", None)
+    rec["plate"] = None  # a plate now lives only in the PHOTO, never typed
+
+
+def _attach_photo(corpus, rec, bank, rng, roles, obsidian):
+    """As _attach_entry, but drawing a random bank image of one of `roles`.
+    Returns True if a photo was attached."""
+    entry = bank.pick(rng, roles)
+    if not entry:
+        return False
+    _attach_entry(corpus, rec, bank, entry, obsidian)
+    return True
 
 
 def _uid(rng):
@@ -85,7 +109,8 @@ def _new_record(dt, loc, rng, platoon_uuid):
 
 # --- normal activity --------------------------------------------------------
 def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
-                 reports=None, obj_name="objektet", images=False, obsidian=False):
+                 reports=None, obj_name="objektet", images=False, obsidian=False,
+                 photos=False):
     rng = _random.Random(seed)
     prof = AREAS[area]
     season = season_of(start.month)
@@ -105,6 +130,8 @@ def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
     render_plate = None
     if images:
         from .images import render_plate  # lazy: only needs Pillow with --images
+    # Real-photo "Se bild" reports from the bundled synthetic bank (§6.7 VLM path).
+    bank = ImageBank.load() if photos else None
 
     for _ in range(reports):
         loc = rng.choice(locs)
@@ -118,8 +145,11 @@ def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
         rec["handelse"] = template.format(car=car, dog=rng.choice(DOGS), colour=rng.choice(COLOURS))
         if rng.random() < 0.12:  # occasional benign appearance (season-appropriate)
             rec["symbol"] = f"{rng.choice(smeta['upper'])}, {rng.choice(smeta['accessory'])}"
-        if images and rec["plate"]:  # a corroborating photo of the typed plate
-            # obsidian: per-message folder (exact app layout); else: a plain attachments/
+        # A fraction of civil messages are photo-only ("Se bild") — benign scenes
+        # and ordinary vehicles-with-plates a Home Guard soldier would snap.
+        if bank and bank.has("benign", "plate") and rng.random() < 0.20:
+            _attach_photo(corpus, rec, bank, rng, ["benign", "plate"], obsidian)
+        elif images and rec["plate"]:  # else: a corroborating card of the typed plate
             folder = _attachment_dir(rec) if obsidian else "attachments"
             img_name = f"plate_{rec['uuid'][:8]}.jpg"
             d = corpus.path / folder
@@ -141,9 +171,11 @@ def _plate(rng):
 
 
 # --- hostiles ---------------------------------------------------------------
-def add_hostiles(corpus, htype, count, seed, varied=False):
+def add_hostiles(corpus, htype, count, seed, varied=False, photos=False):
     rng = _random.Random(seed)
     prof = HOSTILES[htype]
+    bank = ImageBank.load() if photos else None
+    obsidian = bool(corpus.meta.get("obsidian"))
     m = corpus.meta
     lat, lon = m["aoi"]
     start = datetime.strptime(m["from"], "%Y-%m-%d")
@@ -189,11 +221,22 @@ def add_hostiles(corpus, htype, count, seed, varied=False):
     for i in range(count):
         member = f"H{i + 1}"
         mark = marks[i % len(marks)]
+        # Each member may have ONE vehicle for the whole cell run — the SAME plate
+        # photo then recurs across their appearances, so photo→plate→Job A can
+        # re-identify the vehicle and link the pattern (the point of the test).
+        member_vehicle = bank.pick(rng, ["plate"]) if bank and bank.has("plate") and rng.random() < 0.6 else None
         for _ in range(rng.randint(*prof["appearances"])):
             loc = rng.choice(near if rng.random() < prof["near_bias"] else locs)
             rec = _new_record(_threat_time(start, days, rng, prof["night_bias"]), loc, rng, platoon_uuid)
             rec["handelse"] = rng.choice(prof["behaviour"]).format(obj=obj)
             rec["symbol"] = mark
+            # A fraction of appearances arrive as "Se bild": the member's OWN
+            # vehicle (recurring plate) or a surveillance shot (recon behaviour).
+            if bank and rng.random() < 0.4:
+                if member_vehicle and rng.random() < 0.5:
+                    _attach_entry(corpus, rec, bank, member_vehicle, obsidian)
+                elif bank.has("recon"):
+                    _attach_photo(corpus, rec, bank, rng, ["recon"], obsidian)
             corpus.add(rec, "hostile", subtype=htype, member=member)
 
     corpus.save()

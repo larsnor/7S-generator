@@ -98,11 +98,22 @@ python3 -m corpusgen generate \
   JPEG-kommentaren (`7SPLATE:`) så att en offline-konsument kan läsa den. Kräver
   **`images`-tillägget** (installerar Pillow — se [Installation /
   körning](#installation--körning)); allt annat är endast standardbibliotek.
+- `--photos` (valfritt) bifogar **riktiga foton ur den inbyggda bildbanken** som
+  `Se bild.`-rapporter: fordon med läsbar svensk skylt, benigna scener, och (för
+  `add-hostiles`) spaningsbilder (kikare/kamera). Banken är **helsyntetisk**
+  (SDXL-genererade personer/fordon + komponerade skyltar → ingen GDPR/IP-exponering)
+  och varje bilds facit skrivs till `ground_truth.json` (`image_truth`), så en
+  bildanalys-konsument (VLM) kan poängsättas. En fientlig medlem kan ha *sitt* fordon
+  återkommande över flera observationer (foto→skylt→återidentifiering blir testbar).
+  Ingen Pillow behövs — bilderna kopieras bara. Samma bank återanvänds korpus för
+  korpus; fröet styr vilka bilder som hamnar var. (Banken byggs om med
+  `tools/build_bank.py`, vilket kräver torch/diffusers.)
 - `--obsidian` (valfritt) gör utdata **Obsidian-kompatibel och identisk med källappens
   format**: bilder bäddas in som `## Bilagor` + `![[wikilänk]]` i per-meddelande-mappar.
   Utan flaggan används portabel standard-Markdown (`![](attachments/…)`) som renderas i
-  vilken Markdown-läsare som helst. Påverkar bara rapporter som har ett foto (`--images`);
-  allt annat (frontmatter, MGRS med mellanslag, m.m.) är identiskt i båda lägena.
+  vilken Markdown-läsare som helst. Påverkar bara rapporter som har ett foto
+  (`--images`/`--photos`); allt annat (frontmatter, MGRS med mellanslag, m.m.) är
+  identiskt i båda lägena.
 
 ### 2. `add-hostiles` — en hotcell
 ```bash

@@ -69,6 +69,10 @@ class Corpus:
             "member": member, "plate": rec.get("plate"), "sector": rec.get("sector"),
             "callsign": rec.get("callsign"),
         }
+        if rec.get("image"):  # attachment + (for bank photos) the image's facit
+            row["image"] = rec["image"]
+            if rec.get("image_truth"):
+                row["image_truth"] = rec["image_truth"]
         if tells:  # native tell ground truth (varied-marks mode); no hand annotation
             row["tells"] = tells
         self.ground_truth.append(row)
