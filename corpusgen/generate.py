@@ -4,11 +4,13 @@
 `add_protesters` inject a threat / noise layer into an existing corpus. All three
 are seedable and deterministic."""
 import random as _random
+import re as _re
 import uuid as _uuid
 from datetime import datetime, timedelta
 
 from . import geo
-from .content import AREAS, SEASONS, HOSTILES, PROTESTERS, CARS, DOGS, COLOURS, VARIED_TELLS, DECOY_CLOTHING
+from .content import (AREAS, SEASONS, HOSTILES, PROTESTERS, CARS, DOGS, COLOURS,
+                      VARIED_TELLS, DECOY_CLOTHING, CRAFT_WORDS, WATER_AREAS)
 from .corpus import Corpus
 from .imagebank import ImageBank
 from .mgrs import latlon_to_mgrs
@@ -40,6 +42,24 @@ def _attach_photo(corpus, rec, bank, rng, roles, obsidian):
 
 def _uid(rng):
     return str(_uuid.UUID(int=rng.getrandbits(128), version=4))
+
+
+def _craft_of(rec):
+    """Canonical craft types mentioned in the record's FINAL Händelse ⊕ Symbol
+    (word-boundary matched, Swedish-aware) — the craft facit. Call after any
+    photo attachment (which replaces the text with 'Se bild.')."""
+    text = " ".join(filter(None, [rec.get("handelse"), rec.get("symbol")])).lower()
+    found = []
+    for word, key in CRAFT_WORDS.items():
+        if key not in found and _re.search(r"(?<![a-zåäö0-9])" + word + r"(?![a-zåäö0-9])", text):
+            found.append(key)
+    return sorted(found)
+
+
+def _stamp_craft(rec):
+    craft = _craft_of(rec)
+    if craft:
+        rec["craft"] = craft
 
 
 def season_of(month):
@@ -156,6 +176,7 @@ def build_normal(out, lat, lon, radius, area, start, days, callsigns, seed,
             d.mkdir(parents=True, exist_ok=True)
             render_plate(rec["plate"], d / img_name)
             rec["image"] = f"{folder}/{img_name}"
+        _stamp_craft(rec)
         corpus.add(rec, "civil")
 
     corpus.save()
@@ -187,6 +208,10 @@ def add_hostiles(corpus, htype, count, seed, varied=False, photos=False):
     ranked = sorted(locs, key=lambda l: geo.dist_km(lat, lon, l["lat"], l["lon"]))
     near = ranked[: max(1, len(ranked) * 3 // 5)]
 
+    # Water behaviours (boat surveillance / landings) only where there IS water.
+    behaviours = prof["behaviour"] + (
+        prof.get("behaviour_water", []) if m.get("area") in WATER_AREAS else [])
+
     if count is None:
         count = rng.randint(2, 10)
 
@@ -208,9 +233,10 @@ def add_hostiles(corpus, htype, count, seed, varied=False, photos=False):
             for _ in range(rng.randint(*prof["appearances"])):
                 loc = rng.choice(near if rng.random() < prof["near_bias"] else locs)
                 rec = _new_record(_threat_time(start, days, rng, prof["night_bias"]), loc, rng, platoon_uuid)
-                rec["handelse"] = rng.choice(prof["behaviour"]).format(obj=obj)
+                rec["handelse"] = rng.choice(behaviours).format(obj=obj)
                 phrasing = rng.choice(pool).replace("{colour}", colour)
                 rec["symbol"] = f"{rng.choice(DECOY_CLOTHING)}, {phrasing}"
+                _stamp_craft(rec)
                 corpus.add(rec, "hostile", subtype=htype, member=member, tells=[tid])
         corpus.save()
         return count
@@ -228,7 +254,7 @@ def add_hostiles(corpus, htype, count, seed, varied=False, photos=False):
         for _ in range(rng.randint(*prof["appearances"])):
             loc = rng.choice(near if rng.random() < prof["near_bias"] else locs)
             rec = _new_record(_threat_time(start, days, rng, prof["night_bias"]), loc, rng, platoon_uuid)
-            rec["handelse"] = rng.choice(prof["behaviour"]).format(obj=obj)
+            rec["handelse"] = rng.choice(behaviours).format(obj=obj)
             rec["symbol"] = mark
             # A fraction of appearances arrive as "Se bild": the member's OWN
             # vehicle (recurring plate) or a surveillance shot (recon behaviour).
@@ -237,6 +263,7 @@ def add_hostiles(corpus, htype, count, seed, varied=False, photos=False):
                     _attach_entry(corpus, rec, bank, member_vehicle, obsidian)
                 elif bank.has("recon"):
                     _attach_photo(corpus, rec, bank, rng, ["recon"], obsidian)
+            _stamp_craft(rec)
             corpus.add(rec, "hostile", subtype=htype, member=member)
 
     corpus.save()
@@ -264,6 +291,7 @@ def add_protesters(corpus, ptype, count, seed):
         rec = _new_record(dt, loc, rng, platoon_uuid)
         rec["handelse"] = behaviour
         rec["symbol"] = rng.choice(prof["marks"])
+        _stamp_craft(rec)
         corpus.add(rec, "protester", subtype=ptype, member="protest-1")
 
     corpus.save()

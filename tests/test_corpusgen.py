@@ -73,6 +73,52 @@ class TestAugment(unittest.TestCase):
             self.assertEqual(len({r["member"] for r in prot}), 1)        # one group
 
 
+class TestCraftFacit(unittest.TestCase):
+    def test_craft_word_boundary(self):
+        # "Bussresenärer" is people at a stop, not a bus; "Se bild." has no craft.
+        self.assertEqual(generate._craft_of({"handelse": "Bussresenärer väntade vid hållplatsen."}), [])
+        self.assertEqual(generate._craft_of({"handelse": "Se bild."}), [])
+        self.assertEqual(generate._craft_of({"handelse": "Buss släppte av personal vid bommen."}), ["buss"])
+        self.assertEqual(generate._craft_of({"handelse": "Traktor plöjde fältet."}), ["traktor"])
+        self.assertEqual(generate._craft_of({"handelse": "Skåpbil backade mot grinden."}), ["lastbil"])
+        self.assertEqual(generate._craft_of({"handelse": "Drönare hovrade över fältet."}), ["drönare"])
+        self.assertEqual(
+            generate._craft_of({"handelse": "Bogserbåt assisterade fartyg i rännan."}), ["båt", "fartyg"])
+
+    def test_civil_corpus_carries_craft_facit(self):
+        with tempfile.TemporaryDirectory() as d:
+            c = _build(d, days=14, reports=300)
+            tagged = [r for r in c.ground_truth if r.get("craft")]
+            self.assertGreater(len(tagged), 0, "expected craft-tagged civil reports")
+            types = {t for r in tagged for t in r["craft"]}
+            # airport civil pool has tractors, delivery vans, cyclists, aircraft
+            self.assertIn("traktor", types)
+            self.assertIn("flygplan", types)
+
+    def test_hostile_craft_and_water_gating(self):
+        # Coastal corpus: recon pool INCLUDES boat behaviours; some hostile rows
+        # should be craft-tagged (drone or boat) with enough members.
+        with tempfile.TemporaryDirectory() as d:
+            generate.build_normal(out=d, lat=59.663, lon=18.925, radius=3.0, area="coastal",
+                                  start=datetime(2026, 6, 15), days=14, callsigns=CS,
+                                  seed=1, reports=50, obj_name="objektet")
+            generate.add_hostiles(Corpus.load(d), "recon", count=10, seed=3)
+            gt = Corpus.load(d).ground_truth
+            hostile_craft = {t for r in gt if r["truth"] == "hostile" for t in r.get("craft", [])}
+            self.assertTrue({"drönare", "båt"} & hostile_craft,
+                            f"expected drone/boat hostile craft, got {hostile_craft}")
+        # Inland corpus: the water lines are gated OUT — no hostile boats ever.
+        with tempfile.TemporaryDirectory() as d:
+            generate.build_normal(out=d, lat=60.0, lon=15.0, radius=3.0, area="rural",
+                                  start=datetime(2026, 6, 15), days=14, callsigns=CS,
+                                  seed=1, reports=50, obj_name="objektet")
+            generate.add_hostiles(Corpus.load(d), "recon", count=10, seed=3)
+            gt = Corpus.load(d).ground_truth
+            hostile_craft = {t for r in gt if r["truth"] == "hostile" for t in r.get("craft", [])}
+            self.assertNotIn("båt", hostile_craft, "no water in a rural area")
+            self.assertNotIn("fartyg", hostile_craft)
+
+
 class TestCliAoi(unittest.TestCase):
     def _parse(self, *aoi_tokens):
         from corpusgen.cli import build_parser

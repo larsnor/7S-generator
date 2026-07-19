@@ -122,7 +122,10 @@ python3 -m corpusgen add-hostiles --corpus ./corpus_tierp --type recon
 Injicerar **2–10** distinkta fiender (slumpmässigt om inte `--count` anges) av en
 `--type` (`recon · sabotage · infiltration · terrorism`), nära AOI, tidsviktade,
 återkommande 1–4× var. Detekterbara endast som ett spatio-temporalt / beteendemässigt
-mönster.
+mönster. Repertoarerna innehåller även **farkostbeteenden** (drönare över objektet,
+långsam lastbil, ankomst på elsparkcykel); **vattenburna** beteenden (båt som ligger
+och bevakar, landsättning med gummibåt) används bara i områdestyperna `port` och
+`coastal` — en inlandskorpus rapporterar aldrig en båt.
 
 ### 3. `add-protesters` — utmanande civila (brus)
 ```bash
@@ -150,7 +153,9 @@ En korpusmapp innehåller:
 - `TNR<DDHHMM>.md` — rapporterna (7S-format).
 - `ground_truth.json` — en rad per rapport: `truth` (`civil` / `hostile` /
   `protester`), `subtype`, `member`, `plate`, `sector`, `callsign` — så att du kan mäta
-  täckning och precision (recall/precision).
+  täckning och precision (recall/precision). Rapporter vars text nämner en **farkost**
+  får dessutom `craft: [typer]` (t.ex. `drönare`, `båt`, `lastbil`, `sparkcykel`) så
+  att en konsuments farkosttypning är mätbar per typ.
 - `meta.json` — hur den byggdes (AOI, radie, område, datum, anropssignaler, de placerade
   platserna), så att tilläggskommandona injicerar konsekvent i samma område.
 

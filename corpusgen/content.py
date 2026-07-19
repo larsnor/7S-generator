@@ -9,6 +9,49 @@ CARS = ["Volvo V70", "VW Golf", "Toyota Corolla", "Audi A4", "Skoda Octavia",
 DOGS = ["en hund", "två hundar", "en labrador", "en liten terrier", "en schäfer"]
 COLOURS = ["ljus", "gul", "röd", "blå", "grön", "orange", "grå", "beige"]
 
+# --- Craft (farkost) ground truth -------------------------------------------
+# Surface word (exact inflection, matched WHOLE-WORD against the final Händelse ⊕
+# Symbol) -> canonical craft type. Every report that mentions a craft gets a
+# `craft: [types]` row in ground_truth.json, so a downstream detector's craft
+# TYPING is scorable (recall/precision per type) — independent of any consumer's
+# vocabulary. Word-boundary matching keeps "Bussresenärer" (people at a stop)
+# from tagging a bus, and "Se bild." from tagging a car.
+CRAFT_WORDS = {
+    # trucks / vans (plated, ground)
+    "lastbil": "lastbil", "lastbilen": "lastbil", "skåpbil": "lastbil",
+    "skåpbilen": "lastbil", "postbil": "lastbil", "postbilen": "lastbil",
+    "budbil": "lastbil", "leveransbil": "lastbil", "paketbil": "lastbil",
+    "servicebil": "lastbil", "tankbil": "lastbil", "flakbil": "lastbil",
+    "traktor": "traktor", "traktorn": "traktor",
+    "moped": "motorcykel", "mopeden": "motorcykel", "motorcykel": "motorcykel",
+    "fyrhjuling": "motorcykel", "fyrhjulingen": "motorcykel",
+    "buss": "buss", "bussen": "buss",
+    # unplated ground
+    "cykel": "cykel", "cykeln": "cykel", "cyklist": "cykel", "cyklisten": "cykel",
+    "cyklade": "cykel",
+    "elsparkcykel": "sparkcykel", "elsparkcykeln": "sparkcykel",
+    "sparkcykel": "sparkcykel", "elsparkcyklist": "sparkcykel",
+    # watercraft
+    "båt": "båt", "båten": "båt", "motorbåt": "båt", "motorbåten": "båt",
+    "segelbåt": "båt", "segelbåten": "båt", "fritidsbåt": "båt",
+    "fritidsbåten": "båt", "roddbåt": "båt", "gummibåt": "båt",
+    "bogserbåt": "båt", "jolle": "båt", "kajak": "båt", "kajakpaddlare": "båt",
+    "vattenskoter": "båt",
+    "fartyg": "fartyg", "fartyget": "fartyg", "skepp": "fartyg",
+    "färja": "färja", "färjan": "färja",
+    # aircraft
+    "drönare": "drönare", "drönaren": "drönare",
+    "helikopter": "helikopter", "helikoptern": "helikopter",
+    "flygplan": "flygplan", "flygplanet": "flygplan",
+    "segelflygplan": "flygplan", "motorflygplan": "flygplan",
+    "sjöflygplan": "flygplan",
+}
+
+# Areas where WATER hostile behaviours (`behaviour_water`) are plausible and get
+# merged into the repertoire; everywhere else they are left out so an inland
+# corpus never reports a landing craft.
+WATER_AREAS = {"port", "coastal"}
+
 # --- Area types -------------------------------------------------------------
 # reports_per_day: base civilian volume; places: name templates; civil: benign
 # activity prose ({car}/{dog}/{colour} filled in); vehicles: civilians often
@@ -25,7 +68,9 @@ AREAS = {
                   "Bussresenärer väntade vid hållplatsen.", "Cyklist i {colour} jacka passerade.",
                   "Leveransbil lossade utanför butiken.", "Ungdomar samlades på torget.",
                   "{car} parkerade i parkeringshuset.", "Pensionär matade duvor i parken.",
-                  "Servicepersonal utanför kontoret.", "Gatumusikant vid stationen."],
+                  "Servicepersonal utanför kontoret.", "Gatumusikant vid stationen.",
+                  "Elsparkcyklist passerade på gågatan.", "Lastbil lossade varor vid köpcentret.",
+                  "Moped körde längs Hamngatan."],
     },
     "suburban": {
         "reports_per_day": 20,
@@ -37,7 +82,8 @@ AREAS = {
                   "Hundrastare med {dog} på gångvägen.", "Joggare i {colour} passerade.",
                   "Granne klippte häcken.", "Paketbud levererade i villaområdet.",
                   "Ungdomar spelade boll på idrottsplatsen.", "{car} tvättades på uppfarten.",
-                  "Pensionärer promenerade längs villagatan.", "Återvinning lämnades vid stationen."],
+                  "Pensionärer promenerade längs villagatan.", "Återvinning lämnades vid stationen.",
+                  "Elsparkcykel ställdes vid närköpet.", "Lastbil med flyttlass stod på villagatan."],
     },
     "rural": {
         "reports_per_day": 7,
@@ -49,7 +95,8 @@ AREAS = {
                   "{car} körde förbi på grusvägen.", "Hundrastare med {dog} längs byvägen.",
                   "Bonde kontrollerade stängsel.", "Bär- eller svampplockare i skogsbrynet.",
                   "Postbil levererade till gården.", "Ryttare passerade på traktorvägen.",
-                  "Pensionärspar promenerade längs vägen.", "Fiskare vid sjöboden."],
+                  "Pensionärspar promenerade längs vägen.", "Fiskare vid sjöboden.",
+                  "Skåpbil från elfirman stod vid gårdsinfarten.", "Fyrhjuling korsade betesmarken."],
     },
     "airport": {
         "reports_per_day": 22,
@@ -61,7 +108,9 @@ AREAS = {
                   "{car} parkerade vid klubbstugan.", "Traktor klippte gräs längs banan.",
                   "Motionär joggade längs vägen.", "Hundrastare med {dog} på grusvägen.",
                   "Paketbil levererade till klubbstugan.", "Cyklist i {colour} jacka vid grinden.",
-                  "Fältarbetare kontrollerade markeringar.", "Barn matade fåglar vid parkeringen."],
+                  "Fältarbetare kontrollerade markeringar.", "Barn matade fåglar vid parkeringen.",
+                  "Segelflygplan landade på banan.", "Motorflygplan startade och försvann norrut.",
+                  "Helikopter passerade på hög höjd."],
     },
     "port": {
         "reports_per_day": 28,
@@ -73,7 +122,9 @@ AREAS = {
                   "{car} väntade vid färjeläget.", "Fiskare landade fångst vid kajen.",
                   "Hamnarbetare lastade på kajen.", "Fritidsbåt lade till i gästhamnen.",
                   "Hundrastare med {dog} längs vågbrytaren.", "Turister fotograferade båtarna.",
-                  "Bränsleleverans vid bränslekajen.", "Servicebil vid hamnkontoret."],
+                  "Bränsleleverans vid bränslekajen.", "Servicebil vid hamnkontoret.",
+                  "Bogserbåt assisterade fartyg i rännan.", "Motorbåt tankade vid bränslekajen.",
+                  "Färjan lade till vid färjeläget."],
     },
     "military": {
         "reports_per_day": 16,
@@ -85,7 +136,8 @@ AREAS = {
                   "Leverans anmäldes vid grinden.", "Motionär joggade längs staketet utanför.",
                   "Hundrastare med {dog} på vägen utanför.", "Servicetekniker vid förrådet.",
                   "Buss släppte av personal vid bommen.", "Gräsklippning längs vägen.",
-                  "Cyklist i {colour} passerade utanför staketet.", "Postbil vid vakten."],
+                  "Cyklist i {colour} passerade utanför staketet.", "Postbil vid vakten.",
+                  "Lastbil med leverans anmälde sig vid bommen."],
     },
     "coastal": {
         "reports_per_day": 15,
@@ -96,7 +148,9 @@ AREAS = {
                   "{car} parkerade vid badplatsen.", "Hundrastare med {dog} på promenaden.",
                   "Fiskare vid piren, metspö och hink.", "Kajakpaddlare vid viken.",
                   "Solbadare vid klipporna.", "Glasskiosken hade kö.",
-                  "Vandrare i {colour} i naturreservatet.", "Fritidsbåt ankrade i viken."],
+                  "Vandrare i {colour} i naturreservatet.", "Fritidsbåt ankrade i viken.",
+                  "Motorbåt drog badring i viken.", "Segelbåt ankrade utanför piren.",
+                  "Hobbyflygare flög drönare över stranden."],
     },
     "forest": {
         "reports_per_day": 5,
@@ -107,7 +161,8 @@ AREAS = {
                   "Hundrastare med {dog} på timmervägen.", "Motionär sprang i spåret.",
                   "Fågelskådare vid tornet.", "Familj grillade vid rastplatsen.",
                   "Skogsarbetare vid hygget.", "Orienterare passerade myren.",
-                  "Bärplockare längs bäcken.", "Cyklist i {colour} på skogsvägen."],
+                  "Bärplockare längs bäcken.", "Cyklist i {colour} på skogsvägen.",
+                  "Fyrhjuling passerade på timmervägen."],
     },
 }
 
@@ -137,6 +192,8 @@ SEASONS = {
 # Distinct individuals detectable as a spatio-temporal/behavioural pattern near
 # the AOI. `behaviour` prose carries the domain signature; `marks` are distinctive
 # person descriptions (soft re-id). count default is random 2..10 per the spec.
+# `behaviour_water` (optional) is merged into the pool ONLY for WATER_AREAS —
+# an inland corpus never reports a landing craft.
 HOSTILES = {
     "recon": {
         "night_bias": 0.6, "near_bias": 0.9, "appearances": (2, 4),
@@ -148,7 +205,12 @@ HOSTILES = {
             "Mätte av sträckan längs staketet med stegräknare, undvek ögonkontakt.",
             "Riktade kikare mot {obj}, drog sig undan vid uppmärksamhet.",
             "Rörde sig längs skogsbrynet, verkade kartlägga kameraplaceringar.",
-            "Stannade upprepat och tittade bakåt innan vidare mot {obj}."],
+            "Stannade upprepat och tittade bakåt innan vidare mot {obj}.",
+            "Drönare hovrade över {obj} i flera minuter och försvann lågt mot skogsbrynet.",
+            "Liten drönare cirklade längs staketet vid {obj}, ingen operatör syntes."],
+        "behaviour_water": [
+            "Motorbåt gick sakta fram och tillbaka utanför {obj}, släckta lanternor.",
+            "Båt ankrade utanför {obj}, personer ombord med kikare mot land."],
         "marks": ["mörk täckjacka, keps neddragen, solglasögon",
                   "ljusgrå softshell, axelremsväska, kort rakat hår",
                   "grön fältjacka, kikare runt halsen, skäggig",
@@ -168,7 +230,10 @@ HOSTILES = {
             "Placerade ett föremål invid {obj} och avlägsnade sig snabbt.",
             "Undersökte ventilations- och elskåp längs staketet.",
             "Forcerade en avspärrning och tog sig in mot {obj}.",
-            "Manipulerade en bom och lämnade platsen till fots."],
+            "Manipulerade en bom och lämnade platsen till fots.",
+            "Skåpbil backade mot grinden vid {obj} med släckta ljus, lastdörrarna öppna."],
+        "behaviour_water": [
+            "Gummibåt landsattes i mörker vid strandkanten nedanför {obj}."],
         "marks": ["mörk overall, handskar, pannlampa",
                   "svart munkjacka, verktygsväska, mörk mössa",
                   "mörkblå arbetskläder, bultsax, ryggsäck",
@@ -186,7 +251,9 @@ HOSTILES = {
             "Fotograferade skyltar och passersystem vid {obj}.",
             "Klädd som hantverkare, saknade arbetsorder, rörde sig fritt.",
             "Testade en dörr vid {obj} som skulle vara låst.",
-            "Väntade vid personalingången och gled in vid vaktbyte."],
+            "Väntade vid personalingången och gled in vid vaktbyte.",
+            "Anlände på elsparkcykel, ställde den utom synhåll och gick mot {obj}.",
+            "Cyklade långsamt förbi vakten vid {obj}, vände och kom tillbaka."],
         "marks": ["mörk kavaj, portfölj, passerkort på snodd",
                   "hantverkarkläder, verktygsbälte, keps",
                   "vit skjorta, id-bricka, prydligt klädd",
@@ -204,7 +271,9 @@ HOSTILES = {
             "Bar tung ryggsäck, verkade nervös, undvek kameror.",
             "Fotograferade in- och utfarter samt barriärer vid {obj}.",
             "Testade fordonsspärrar och avstånd till {obj}.",
-            "Höll uppsikt över entrén och antecknade tider."],
+            "Höll uppsikt över entrén och antecknade tider.",
+            "Tung lastbil körde långsamt förbi {obj} upprepade gånger utan att stanna.",
+            "Drönare filmade folksamlingen och entrén vid {obj} från låg höjd."],
         "marks": ["mörk jacka, tung ryggsäck, svettig och nervös",
                   "vid rock, handskar trots milt väder, mörk mössa",
                   "mörka kläder, oidentifierad väska, undvek ögonkontakt",

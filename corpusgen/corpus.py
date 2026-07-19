@@ -69,6 +69,8 @@ class Corpus:
             "member": member, "plate": rec.get("plate"), "sector": rec.get("sector"),
             "callsign": rec.get("callsign"),
         }
+        if rec.get("craft"):  # craft (farkost) types mentioned in the text — facit
+            row["craft"] = rec["craft"]
         if rec.get("image"):  # attachment + (for bank photos) the image's facit
             row["image"] = rec["image"]
             if rec.get("image_truth"):
